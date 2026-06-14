@@ -8,6 +8,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
+| v2 | [`v2`](https://github.com/chainguard-actions/Balastrong-chess-stats-action/tree/v2) | — |
 | v2.0.1 | [`v2.0.1`](https://github.com/chainguard-actions/Balastrong-chess-stats-action/tree/v2.0.1) | [`8e03e79`](https://github.com/Balastrong/chess-stats-action/commit/8e03e794f038175872737662788deb222c6f4c33) |
 
 ## Privacy
