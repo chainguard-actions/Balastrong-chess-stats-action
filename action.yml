@@ -1,0 +1,43 @@
+name: 'Chess.com Games & Stats'
+description: 'Automatically update your README.md with Chess.com games and stats - fully customizable'
+author: 'Leonardo Montini'
+inputs:
+  CHESS_USERNAME:
+    description: 'Your Chess.com username'
+    default: 'hikaru'
+    required: true
+  COMMIT_MSG:
+    description: "Commit message used while committing to the repo"
+    default: "♟️ Updated README with your chess games"
+    required: false
+  GAMES_SIZE:
+    description: "How many games to load"
+    default: "10"
+    required: false
+  SHOW_DATE:
+    description: "Toggle the Date column"
+    default: "true"
+    required: false
+  SHOW_FEN:
+    description: "Toggle the Position column"
+    default: "true"
+    required: false
+  FILE_NAME:
+    description: "Define a specific file in your repo"
+    default: "README.md"
+    required: false
+  SHOW_STATS:
+    description: "Toggle the stats table"
+    default: "true"
+    required: false
+  SHOW_TIME_CLASS:
+    description: "Toggle the game type column"
+    default: "true"
+    required: false
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
+  pre: chainguard-phonehome.js
+branding:
+  icon: 'activity'
+  color: 'green'
