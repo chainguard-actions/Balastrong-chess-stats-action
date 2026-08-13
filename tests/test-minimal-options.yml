@@ -1,0 +1,78 @@
+name: Test minimal options
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create README with chess tokens
+        run: |
+          cat > README.md << 'EOF'
+          # Chess Stats
+
+          <!--START_SECTION:chessStats-->
+          <!--END_SECTION:chessStats-->
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          CHESS_USERNAME: hikaru
+          GAMES_SIZE: "3"
+          SHOW_DATE: "false"
+          SHOW_FEN: "false"
+          SHOW_STATS: "false"
+          SHOW_TIME_CLASS: "false"
+          IS_DEBUG: "true"
+
+      - name: Assert README was updated without optional columns
+        run: |
+          echo "=== README.md content ==="
+          cat README.md
+          echo "========================="
+
+          # Check that the start token is still present
+          if ! grep -q '<!--START_SECTION:chessStats-->' README.md; then
+            echo "FAIL: START_SECTION token not found in README"
+            exit 1
+          fi
+
+          # Check that the end token is still present
+          if ! grep -q '<!--END_SECTION:chessStats-->' README.md; then
+            echo "FAIL: END_SECTION token not found in README"
+            exit 1
+          fi
+
+          # Check that the games table header is present (White/Black columns always shown)
+          if ! grep -q 'White' README.md; then
+            echo "FAIL: Games table not found in README"
+            exit 1
+          fi
+
+          # Verify Date column is NOT present (SHOW_DATE=false)
+          if grep -q 'Date' README.md; then
+            echo "FAIL: Date column should not be present when SHOW_DATE=false"
+            exit 1
+          fi
+
+          # Verify Position column is NOT present (SHOW_FEN=false)
+          if grep -q 'Position' README.md; then
+            echo "FAIL: Position column should not be present when SHOW_FEN=false"
+            exit 1
+          fi
+
+          # Verify Type column is NOT present (SHOW_TIME_CLASS=false)
+          if grep -q 'Type' README.md; then
+            echo "FAIL: Type column should not be present when SHOW_TIME_CLASS=false"
+            exit 1
+          fi
+
+          # Verify stats table is NOT present (SHOW_STATS=false)
+          if grep -q 'Rapid' README.md; then
+            echo "FAIL: Stats table should not be present when SHOW_STATS=false"
+            exit 1
+          fi
+
+          echo "PASS: README was updated with minimal columns only"

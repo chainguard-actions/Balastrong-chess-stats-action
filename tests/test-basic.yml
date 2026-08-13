@@ -1,0 +1,62 @@
+name: Test basic usage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create README with chess tokens
+        run: |
+          cat > README.md << 'EOF'
+          # My Chess Profile
+
+          <!--START_SECTION:chessStats-->
+          <!--END_SECTION:chessStats-->
+
+          ## Other content
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          CHESS_USERNAME: hikaru
+          GAMES_SIZE: "5"
+          SHOW_DATE: "true"
+          SHOW_FEN: "true"
+          SHOW_STATS: "true"
+          SHOW_TIME_CLASS: "true"
+          IS_DEBUG: "true"
+
+      - name: Assert README was updated with chess content
+        run: |
+          echo "=== README.md content ==="
+          cat README.md
+          echo "========================="
+
+          # Check that the start token is still present
+          if ! grep -q '<!--START_SECTION:chessStats-->' README.md; then
+            echo "FAIL: START_SECTION token not found in README"
+            exit 1
+          fi
+
+          # Check that the end token is still present
+          if ! grep -q '<!--END_SECTION:chessStats-->' README.md; then
+            echo "FAIL: END_SECTION token not found in README"
+            exit 1
+          fi
+
+          # Check that the auto-generated comment is present
+          if ! grep -q 'Automatically generated' README.md; then
+            echo "FAIL: Auto-generated comment not found in README"
+            exit 1
+          fi
+
+          # Check that the games table header is present (White/Black columns)
+          if ! grep -q 'White' README.md; then
+            echo "FAIL: Games table not found in README"
+            exit 1
+          fi
+
+          echo "PASS: README was successfully updated with chess content"

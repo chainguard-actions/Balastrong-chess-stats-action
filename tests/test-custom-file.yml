@@ -1,0 +1,71 @@
+name: Test custom file name
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create custom file with chess tokens
+        run: |
+          cat > CHESS.md << 'EOF'
+          # Chess Games
+
+          <!--START_SECTION:chessStats-->
+          <!--END_SECTION:chessStats-->
+
+          ## Footer
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          CHESS_USERNAME: hikaru
+          GAMES_SIZE: "5"
+          FILE_NAME: "CHESS.md"
+          SHOW_STATS: "true"
+          IS_DEBUG: "true"
+
+      - name: Assert custom file was updated
+        run: |
+          echo "=== CHESS.md content ==="
+          cat CHESS.md
+          echo "========================"
+
+          # Verify the custom file was updated (not README.md)
+          if ! grep -q '<!--START_SECTION:chessStats-->' CHESS.md; then
+            echo "FAIL: START_SECTION token not found in CHESS.md"
+            exit 1
+          fi
+
+          if ! grep -q '<!--END_SECTION:chessStats-->' CHESS.md; then
+            echo "FAIL: END_SECTION token not found in CHESS.md"
+            exit 1
+          fi
+
+          # Check that the auto-generated comment is present
+          if ! grep -q 'Automatically generated' CHESS.md; then
+            echo "FAIL: Auto-generated comment not found in CHESS.md"
+            exit 1
+          fi
+
+          # Check that the games table is present
+          if ! grep -q 'White' CHESS.md; then
+            echo "FAIL: Games table not found in CHESS.md"
+            exit 1
+          fi
+
+          # Check that stats table is present (SHOW_STATS=true)
+          if ! grep -q 'Rapid' CHESS.md; then
+            echo "FAIL: Stats table not found in CHESS.md"
+            exit 1
+          fi
+
+          # Verify README.md was NOT modified (it doesn't have the tokens)
+          if [ -f README.md ] && grep -q 'Automatically generated' README.md; then
+            echo "FAIL: README.md should not have been modified"
+            exit 1
+          fi
+
+          echo "PASS: Custom file CHESS.md was successfully updated"

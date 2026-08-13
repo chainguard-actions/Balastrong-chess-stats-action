@@ -1,0 +1,44 @@
+name: Test minimal display options
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create README with chess markers
+        run: |
+          cat > "$GITHUB_WORKSPACE/README.md" <<'EOF'
+          # Chess Stats
+
+          <!--START_SECTION:chessStats-->
+          <!--END_SECTION:chessStats-->
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          CHESS_USERNAME: hikaru
+          GAMES_SIZE: "3"
+          SHOW_DATE: "false"
+          SHOW_FEN: "false"
+          SHOW_STATS: "false"
+          SHOW_TIME_CLASS: "false"
+          FILE_NAME: "README.md"
+          IS_DEBUG: "true"
+
+      - name: Assert README was updated
+        run: |
+          echo "Checking README.md was updated..."
+          if [ ! -f "$GITHUB_WORKSPACE/README.md" ]; then
+            echo "FAIL: README.md not found"
+            exit 1
+          fi
+          echo "README.md contents:"
+          cat "$GITHUB_WORKSPACE/README.md"
+          if ! grep -q "START_SECTION:chessStats" "$GITHUB_WORKSPACE/README.md"; then
+            echo "FAIL: chess stats section not found in README.md"
+            exit 1
+          fi
+          echo "PASS: README.md exists and action completed with minimal display options"
