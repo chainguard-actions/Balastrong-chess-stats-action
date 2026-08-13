@@ -1,0 +1,45 @@
+name: Test minimal configuration
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create target README file
+        run: |
+          echo "# Profile" > README.md
+          echo "<!--START_SECTION:chessStats-->" >> README.md
+          echo "<!--END_SECTION:chessStats-->" >> README.md
+
+      - id: action
+        uses: .
+        with:
+          CHESS_USERNAME: hikaru
+          GAMES_SIZE: "2"
+          SHOW_STATS: "false"
+          SHOW_DATE: "false"
+          SHOW_FEN: "false"
+          IS_DEBUG: "true"
+
+      - name: Assert README was updated with minimal config
+        run: |
+          echo "=== README.md contents ==="
+          cat README.md
+          echo "==========================="
+          if [ ! -f "README.md" ]; then
+            echo "FAIL: README.md does not exist"
+            exit 1
+          fi
+          # File should exist and be non-empty
+          if [ ! -s "README.md" ]; then
+            echo "FAIL: README.md is empty"
+            exit 1
+          fi
+          # The section tokens should have been replaced with content
+          if grep -q "<!--START_SECTION:chessStats-->.*<!--END_SECTION:chessStats-->" README.md; then
+            echo "FAIL: README.md still has empty section tokens"
+            exit 1
+          fi
+          echo "PASS: README.md exists and is non-empty after action run"

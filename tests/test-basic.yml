@@ -1,0 +1,42 @@
+name: Test basic usage
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Reset fixture file to initial state
+        run: |
+          printf '# Chess Stats Test\n\n<!--START_SECTION:chessStats-->\n<!--END_SECTION:chessStats-->\n' \
+            > "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"
+          echo "=== Fixture file prepared ==="
+          cat "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"
+
+      - id: action
+        uses: .
+        with:
+          CHESS_USERNAME: hikaru
+          GAMES_SIZE: "5"
+          FILE_NAME: "tests/fixtures/README-with-tokens.md"
+        env:
+          INPUT_IS_DEBUG: "true"
+
+      - name: Assert fixture file was updated with chess games
+        run: |
+          echo "=== Fixture file content ==="
+          cat "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"
+          if ! grep -q "<!--START_SECTION:chessStats-->" "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"; then
+            echo "FAIL: START_TOKEN not found in fixture file"
+            exit 1
+          fi
+          if ! grep -q "<!--END_SECTION:chessStats-->" "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"; then
+            echo "FAIL: END_TOKEN not found in fixture file"
+            exit 1
+          fi
+          if ! grep -q "White ⚪" "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"; then
+            echo "FAIL: Games table header not found in fixture file"
+            exit 1
+          fi
+          echo "PASS: Fixture file was updated with chess games"

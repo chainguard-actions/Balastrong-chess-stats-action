@@ -1,0 +1,49 @@
+name: Test custom options
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Reset fixture file to initial state
+        run: |
+          printf '# Chess Stats Test\n\n<!--START_SECTION:chessStats-->\n<!--END_SECTION:chessStats-->\n' \
+            > "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"
+          echo "=== Fixture file prepared ==="
+          cat "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"
+
+      - id: action
+        uses: .
+        with:
+          CHESS_USERNAME: hikaru
+          GAMES_SIZE: "3"
+          SHOW_DATE: "false"
+          SHOW_FEN: "false"
+          SHOW_STATS: "true"
+          FILE_NAME: "tests/fixtures/README-with-tokens.md"
+        env:
+          INPUT_IS_DEBUG: "true"
+
+      - name: Assert fixture file was updated without date and FEN columns
+        run: |
+          echo "=== Fixture file content ==="
+          cat "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"
+          if ! grep -q "White ⚪" "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"; then
+            echo "FAIL: Games table header not found in fixture file"
+            exit 1
+          fi
+          if grep -q "Date 📅" "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"; then
+            echo "FAIL: Date column should not be present when SHOW_DATE=false"
+            exit 1
+          fi
+          if grep -q "Position 🗺️" "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"; then
+            echo "FAIL: Position column should not be present when SHOW_FEN=false"
+            exit 1
+          fi
+          if ! grep -q "Rapid ⏲️" "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"; then
+            echo "FAIL: Stats table not found when SHOW_STATS=true"
+            exit 1
+          fi
+          echo "PASS: Fixture file updated with correct columns"

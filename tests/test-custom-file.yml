@@ -1,0 +1,42 @@
+name: Test custom file name
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Reset fixture files to initial state
+        run: |
+          printf '# My Chess Stats\n\n<!--START_SECTION:chessStats-->\n<!--END_SECTION:chessStats-->\n' \
+            > "$GITHUB_WORKSPACE/tests/fixtures/CHESS_STATS.md"
+          printf '# Chess Stats Test\n\n<!--START_SECTION:chessStats-->\n<!--END_SECTION:chessStats-->\n' \
+            > "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"
+          echo "=== Fixture files prepared ==="
+          cat "$GITHUB_WORKSPACE/tests/fixtures/CHESS_STATS.md"
+
+      - id: action
+        uses: .
+        with:
+          CHESS_USERNAME: hikaru
+          GAMES_SIZE: "3"
+          FILE_NAME: "tests/fixtures/CHESS_STATS.md"
+        env:
+          INPUT_IS_DEBUG: "true"
+
+      - name: Assert custom fixture file was updated
+        run: |
+          echo "=== CHESS_STATS.md content ==="
+          cat "$GITHUB_WORKSPACE/tests/fixtures/CHESS_STATS.md"
+          if ! grep -q "White ⚪" "$GITHUB_WORKSPACE/tests/fixtures/CHESS_STATS.md"; then
+            echo "FAIL: Games table not found in custom fixture file CHESS_STATS.md"
+            exit 1
+          fi
+          echo "=== README-with-tokens.md content ==="
+          cat "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"
+          if grep -q "White ⚪" "$GITHUB_WORKSPACE/tests/fixtures/README-with-tokens.md"; then
+            echo "FAIL: README-with-tokens.md should not have been modified"
+            exit 1
+          fi
+          echo "PASS: Custom fixture file was updated correctly"

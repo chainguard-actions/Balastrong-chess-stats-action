@@ -1,0 +1,23 @@
+name: Chess Stats Action
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *' # Runs at 00:00 UTC every day
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    name: Update readme with your chess stats and games
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@a37ce9120846195fa4ece8f58b268e6043cb2f26 # v3
+      - uses: ./
+        with:
+          CHESS_USERNAME: 'hikaru'
+          FILE_NAME: 'README-DEMO.md'
