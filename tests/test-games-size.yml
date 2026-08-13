@@ -1,0 +1,55 @@
+name: Test custom games size
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Prepare README-DEMO.md with required tokens
+        run: |
+          cp "$GITHUB_WORKSPACE/tests/fixtures/README-DEMO.md" "$GITHUB_WORKSPACE/README-DEMO.md"
+
+      - id: action
+        uses: .
+        with:
+          CHESS_USERNAME: hikaru
+          GAMES_SIZE: "3"
+          SHOW_DATE: "false"
+        env:
+          INPUT_DEBUG: "true"
+
+      - name: Assert response output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.response }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected response output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: response output is set: $ACTUAL"
+
+      - name: Assert README-DEMO.md was updated with at most 3 game rows
+        run: |
+          echo "--- README-DEMO.md content ---"
+          cat "$GITHUB_WORKSPACE/README-DEMO.md"
+          echo "--- end ---"
+          # Count table data rows (lines starting with "| " that are not header/separator rows)
+          # Header rows contain "White" or "---", data rows contain game results
+          ROW_COUNT=$(grep -c "^| " "$GITHUB_WORKSPACE/README-DEMO.md" || true)
+          echo "Total pipe-starting rows: $ROW_COUNT"
+          # Data rows contain "span" (from the formatted result column)
+          DATA_ROWS=$(grep -c "<span" "$GITHUB_WORKSPACE/README-DEMO.md" || true)
+          echo "Game data rows (with span): $DATA_ROWS"
+          if [ "$DATA_ROWS" -gt 3 ]; then
+            echo "FAIL: expected at most 3 game rows, got $DATA_ROWS"
+            exit 1
+          fi
+          if [ "$DATA_ROWS" -eq 0 ]; then
+            echo "FAIL: expected at least 1 game row, got 0"
+            exit 1
+          fi
+          echo "PASS: found $DATA_ROWS game rows (expected <= 3)"

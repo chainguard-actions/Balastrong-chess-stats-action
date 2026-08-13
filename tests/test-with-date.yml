@@ -1,0 +1,44 @@
+name: Test show date toggle - date column visible
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Prepare README-DEMO.md with required tokens
+        run: |
+          cp "$GITHUB_WORKSPACE/tests/fixtures/README-DEMO.md" "$GITHUB_WORKSPACE/README-DEMO.md"
+
+      - id: action
+        uses: .
+        with:
+          CHESS_USERNAME: hikaru
+          GAMES_SIZE: "5"
+          SHOW_DATE: "true"
+        env:
+          INPUT_DEBUG: "true"
+
+      - name: Assert response output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.response }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected response output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: response output is set: $ACTUAL"
+
+      - name: Assert README-DEMO.md contains date column
+        run: |
+          echo "--- README-DEMO.md content ---"
+          cat "$GITHUB_WORKSPACE/README-DEMO.md"
+          echo "--- end ---"
+          if ! grep -q "Date" "$GITHUB_WORKSPACE/README-DEMO.md"; then
+            echo "FAIL: expected 'Date' column when SHOW_DATE=true"
+            exit 1
+          fi
+          echo "PASS: Date column is present as expected"

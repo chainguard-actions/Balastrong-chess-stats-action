@@ -1,0 +1,47 @@
+name: Test basic usage - default chess username
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Prepare README-DEMO.md with required tokens
+        run: |
+          cp "$GITHUB_WORKSPACE/tests/fixtures/README-DEMO.md" "$GITHUB_WORKSPACE/README-DEMO.md"
+
+      - id: action
+        uses: .
+        with:
+          CHESS_USERNAME: hikaru
+          GAMES_SIZE: "5"
+        env:
+          INPUT_DEBUG: "true"
+
+      - name: Assert response output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.response }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected response output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: response output is set: $ACTUAL"
+
+      - name: Assert README-DEMO.md was updated with chess stats
+        run: |
+          echo "--- README-DEMO.md content ---"
+          cat "$GITHUB_WORKSPACE/README-DEMO.md"
+          echo "--- end ---"
+          if ! grep -q "White" "$GITHUB_WORKSPACE/README-DEMO.md"; then
+            echo "FAIL: expected chess stats table header 'White' in README-DEMO.md"
+            exit 1
+          fi
+          if ! grep -q "Black" "$GITHUB_WORKSPACE/README-DEMO.md"; then
+            echo "FAIL: expected chess stats table header 'Black' in README-DEMO.md"
+            exit 1
+          fi
+          echo "PASS: README-DEMO.md contains chess stats table"
